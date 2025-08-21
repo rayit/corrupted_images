@@ -20,6 +20,7 @@ const char *extensions[] = {"jpg", "jpeg", "png", "gif", "tiff", "bmp", "webp", 
 
 int has_supported_extensiona(const char* filename)
 {
+  // TODO
 
 }
 
@@ -27,7 +28,7 @@ int has_supported_extensiona(const char* filename)
 int check_image(const char* filepath) 
 { 
   MagickWand *wand = NewMagickWand();
-  
+  // TODO
 }
 
 // dir_path is reused in while loop 
