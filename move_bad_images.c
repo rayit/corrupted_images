@@ -22,7 +22,8 @@
 const char *extensions[] = {"jpg", "jpeg", "png", "gif", "tiff", "bmp", "webp", NULL};
 
 // Create directories recursively
-void mkdir_p(const char *path) 
+void
+mkdir_p(const char *path) 
 {
     char tmp[MAX_PATH];
     snprintf(tmp, sizeof(tmp), "%s", path);

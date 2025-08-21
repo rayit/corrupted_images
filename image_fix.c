@@ -18,10 +18,18 @@
 // Extensions supported
 const char *extensions[] = {"jpg", "jpeg", "png", "gif", "tiff", "bmp", "webp", NULL};
 
-int has_supported_extensiona(const char* filename)
+// Check file extension
+int 
+has_supported_extension(const char *filename) 
 {
-  // TODO
-
+    const char **ext = extensions;
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return 0;
+    dot++; // skip dot
+    for(; *ext; ext++) {
+        if(strcasecmp(dot, *ext) == 0) return 1;
+    }
+    return 0;
 }
 
 // magick -define jpeg:ignore-warnings=true 107-0736_IMG.jpg -colorspace sRGB -quality 95 fixed.jpg
