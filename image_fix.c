@@ -33,14 +33,43 @@ has_supported_extension(const char *filename)
 }
 
 // magick -define jpeg:ignore-warnings=true 107-0736_IMG.jpg -colorspace sRGB -quality 95 fixed.jpg
-int check_image(const char* filepath) 
+// TODO other types of files like png
+int check_image(const char* filepath, const char* destination_dir) 
 { 
   MagickWand *wand = NewMagickWand();
-  // TODO
+  
+  MagickSetOption(wand, "jpeg:ingore-warnings", "true");
+  
+  // Read image
+  if (MagickReadImage(wand, filepath) == MagickFalse) {
+    fprintf(stderr, "Failed to read image %s \n", filepath); 
+    return -1;
+  }
+
+  if (MagickSetImageColorspace(wand, sRGBColorspace) == MagickFalse) {
+    fprintf(stderr, "Failed set image colorspace %s \n", filepath);
+    return -1;
+  }
+
+  MagickSetImageCompressionQuality(wand, 95);
+
+  // Write output image
+  char *fixed_file_path;
+  fixed_file_path = malloc(strlen(destination_dir) + strlen(filepath) +1);
+  strcpy(fixed_file_path, destination_dir);
+  strcat(fixed_file_path, filepath);
+  
+  if (MagickWriteImage(wand, fixed_file_path ) == MagickFalse) {
+    fprintf(stderr, "Failed to write image\n");
+    return 1;
+  }
+
+  // Clean up
+  if (wand) wand = DestroyMagickWand(wand);
 }
 
 // dir_path is reused in while loop 
-void process_directory(const char* dir_path, const char* start_dir) 
+void process_directory(const char* dir_path, const char* start_dir, const char* destination_dir) 
 {
   DIR *dir = opendir(dir_path);
   if (!dir) return;
@@ -52,22 +81,18 @@ void process_directory(const char* dir_path, const char* start_dir)
     
     char path[MAX_PATH];
     snprintf(path, sizeof(path), "%s/%s", dir_path, entry->d_name);
-    printf("Entry: %s \n ", path);
 
     // Rerun on foldes
     struct stat st;
     if (stat(path, &st) !=0) continue;
-    printf("Filesize: %ld ,", st.st_size);
 
     if (S_ISDIR(st.st_mode)) {
-      printf("Is directory: %s /n", path);
-      process_directory(path, start_dir);
+      printf("Directory: %s \n", path);
+      process_directory(path, start_dir, destination_dir);
     } else if(S_ISREG(st.st_mode)) {
-      printf("Is file: %s /n", path);
-      // TODO do stuff
-      // Check bad or not...
-      // If bad try to fix?
-      // Should I move to other folder?
+        if (has_supported_extension( entry->d_name)) {
+          check_image( path, destination_dir); 
+        }
     }
   }
 }
@@ -75,21 +100,22 @@ void process_directory(const char* dir_path, const char* start_dir)
 
 int main(int argc, char **argv)
 {
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s <source_folder> \n", argv[0]);
+  if (argc < 3) {
+    fprintf(stderr, "Usage: %s <source_folder> <destination_folder \n", argv[0]);
     return -1;
   }
 
   const char* start_dir = argv[1];
+  const char* destination_dir = argv[2];
 
   MagickWandGenesis();
 
   printf("Starting scan from directory: %s \n", start_dir);
 
-  process_directory(start_dir, start_dir);
+  process_directory(start_dir, start_dir, destination_dir);
 
   MagickWandTerminus();
-  printf("Fixind gone\n");
+  printf("Fixing done\n");
   return 0;
 }
 
